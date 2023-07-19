@@ -14,6 +14,7 @@ endif
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 BUILD_ID ?= $(shell git rev-parse --short HEAD)
+CHART_VER ?= $(shell git describe --exact-match --tags HEAD || echo 0.1-`git rev-parse --short HEAD`)
 timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 
 # best to keep the prefix as short as possible to not exceed naming limits for things like keyvault (24 chars)
@@ -236,7 +237,7 @@ helm-chart-manifests: generate
 	# create unique names so each instance of the operator has its own role binding 
 	find ./charts/azure-service-operator/templates/generated/ -name *clusterrole* -exec perl -pi -e 's/$$/-{{ .Release.Namespace }}/ if /name: azure/' {} \;
 	# package the necessary files into a tar file
-	helm package ./charts/azure-service-operator -d ./charts
+	helm package ./charts/azure-service-operator -d ./charts --version $(CHART_VER)
 	# update Chart.yaml for Helm Repository
 	helm repo index ./charts
 
